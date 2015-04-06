@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>dateDeparture</key>
+	<string>05.04.2015 03:27</string>
+	<key>destination</key>
+	<string>Nürnberg</string>
+	<key>departingFrom</key>
+	<string>Berlin</string>
+	<key>train</key>
+	<dict>
+		<key>name</key>
+		<string>ICE 0815</string>
+		<key>maxSpeed</key>
+		<integer>300</integer>
+		<key>hasRestaurant</key>
+		<true/>
+	</dict>
+	<key>travelers</key>
+	<array>
+		<string>Peter</string>
+		<string>Paul</string>
+		<string>Marry</string>
+	</array>
+</dict>
+</plist>

@@ -1,0 +1,11 @@
+{
+    "dateDeparture":"05.04.2015 03:27",
+    "destination":"Nürnberg",
+    "departingFrom":"Berlin",
+    "train" : {
+        "name" : "ICE 0815",
+        "maxSpeed": 300,
+        "hasRestaurant" : true
+    },
+    "travelers" : ["Peter","Paul","Marry"]
+}
