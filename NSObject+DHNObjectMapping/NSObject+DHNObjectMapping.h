@@ -54,11 +54,11 @@ typedef void(^DHNMappingBlock)(NSString *dictionaryKeyPath, id dictionaryValue);
 @interface DHNObjectMappingConfiguration : NSObject
 
 /**
- *  Gets all specified attributes in the mapping configuration
+ *  Gets all specified key paths in the mapping configuration
  *
- *  @return An array containing all attributes in the mapping configuration
+ *  @return An array containing all key paths in the mapping configuration
  */
-- (NSArray *)allAttributes;
+- (NSArray *)allKeyPaths;
 
 /**
  *  Sets the mapping for a dictionary key path to an object property

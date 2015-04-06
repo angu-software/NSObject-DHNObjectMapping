@@ -84,64 +84,64 @@ NSObject *const kDHNMappingByDefault = @"kDHNMappingByDefault";
 
 }
 
-- (NSArray *)allAttributes
+- (NSArray *)allKeyPaths
 {
 
     return [[self.valueMappings allKeys] arrayByAddingObjectsFromArray:[self.keyPathMappings allKeys]];
 
 }
 
-- (void)setMappingFromDictionaryKeyPath:(NSString *)attributeKeyPath
+- (void)setMappingFromDictionaryKeyPath:(NSString *)keyPath
                          toPropertyKey:(NSString *)propertyKey
 {
-    self.valueMappings[attributeKeyPath] = propertyKey;
+    self.valueMappings[keyPath] = propertyKey;
 }
 
-- (void)setMappingFromDictionaryKeyPath:(NSString *)attributeKeyPath
+- (void)setMappingFromDictionaryKeyPath:(NSString *)keyPath
                          toPropertyKey:(NSString *)propertyKey
                              withBlock:(DHNDictionaryKeyPathToPropertyMappingBlock)mappingBlock
 {
 
-    [self setMappingFromDictionaryKeyPath:attributeKeyPath toPropertyKey:propertyKey];
+    [self setMappingFromDictionaryKeyPath:keyPath toPropertyKey:propertyKey];
     
-    self.blockMappings[attributeKeyPath] = mappingBlock;
+    self.blockMappings[keyPath] = mappingBlock;
 
     // removing the class mapping -> block mapping replaces the class mapping
-    if ([[self.classMappings allKeys] containsObject:attributeKeyPath]) {
-        [self.classMappings removeObjectForKey:attributeKeyPath];
+    if ([[self.classMappings allKeys] containsObject:keyPath]) {
+        [self.classMappings removeObjectForKey:keyPath];
     }
     
 }
 
-- (void)setMappingFromDictionaryKeyPath:(NSString *)attributeKeyPath
+- (void)setMappingFromDictionaryKeyPath:(NSString *)keyPath
                          toPropertyKey:(NSString *)propertyKey
                              withClass:(Class)objectClass
 {
 
-    [self setMappingFromDictionaryKeyPath:attributeKeyPath toPropertyKey:propertyKey];
+    [self setMappingFromDictionaryKeyPath:keyPath toPropertyKey:propertyKey];
     
-    self.classMappings[attributeKeyPath] = objectClass;
+    self.classMappings[keyPath] = objectClass;
 
     // removing the block mapping -> class mapping replaces the block mapping
-    if ([[self.blockMappings allKeys] containsObject:attributeKeyPath]) {
-        [self.blockMappings removeObjectForKey:attributeKeyPath];
+    if ([[self.blockMappings allKeys] containsObject:keyPath]) {
+        [self.blockMappings removeObjectForKey:keyPath];
     }
     
 }
 
 
-- (void)setMappingForDictionaryKeyPath:(NSString *)attributeKeyPath
+- (void)setMappingForDictionaryKeyPath:(NSString *)keyPath
                             withBlock:(DHNMappingBlock)mappingBlock
 {
 
-    self.keyPathMappings[attributeKeyPath] = mappingBlock;
+    self.keyPathMappings[keyPath] = mappingBlock;
 
 }
 
-- (void)removeKeyPathMappings:(NSArray *)attributeKeypaths
+- (void)removeKeyPathMappings:(NSArray *)keyPaths
 {
     
-    [attributeKeypaths enumerateObjectsUsingBlock:^(NSString *dictionaryKeyPath, NSUInteger idx, BOOL *stop) {
+    [keyPaths enumerateObjectsUsingBlock:^(NSString *dictionaryKeyPath, NSUInteger idx, BOOL *stop) {
         
         [self.blockMappings removeObjectForKey:dictionaryKeyPath];
         [self.classMappings removeObjectForKey:dictionaryKeyPath];
@@ -209,20 +209,20 @@ NSObject *const kDHNMappingByDefault = @"kDHNMappingByDefault";
                           andConfiguration:(DHNObjectMappingConfiguration *)mappingConfiguration
 {
 
-    // must ignore all attributes from the mapping configuration for the generic mapping
+    // must ignore all key paths from the mapping configuration for the generic mapping
     // otherwise the mapped objects could contain broken data, although they are specified in the mapping configuration
-    NSArray *attributesIgnoredByGenericMapping = mappingConfiguration.allAttributes;
+    NSArray *keyPathsIgnoredByGenericMapping = mappingConfiguration.allKeyPaths;
     
-    NSArray *mappedAttributes = [self dhn_attributeMappingWithdictionary:dictionary andConfiguration:mappingConfiguration];
+    NSArray *mappedKeyPaths = [self dhn_keyPathMappingWithDictionary:dictionary andConfiguration:mappingConfiguration];
     
-    // remove already mapped attributes from configuration in order to not process them again
-    [mappingConfiguration removeKeyPathMappings:mappedAttributes];
+    // remove already mapped key paths from configuration in order to not process them again
+    [mappingConfiguration removeKeyPathMappings:mappedKeyPaths];
     
-    // mapp attributes directly to properties
-    [self dhn_attributesToPropertyMappingWithdictionary:dictionary andConfiguration:mappingConfiguration];
+    // mapp key paths directly to properties
+    [self dhn_keyPathToPropertyMappingWithDictionary:dictionary andConfiguration:mappingConfiguration];
     
-    // generic mapping (mapping attributes to properties of same name)
-    [self dhn_genericAttributesToPropertyMappingWithdictionary:dictionary ignoreAttributes:attributesIgnoredByGenericMapping];
+    // generic mapping (mapping key paths to properties of same name)
+    [self dhn_genericKeyPathToPropertyMappingWithDictionary:dictionary ignoreKeyPaths:keyPathsIgnoredByGenericMapping];
 
 }
 
@@ -261,30 +261,30 @@ NSObject *const kDHNMappingByDefault = @"kDHNMappingByDefault";
 /*
  *  Iterates over all keys of the dictionary and try to set the value to a propperty with the same name.
  */
-- (NSArray *)dhn_genericAttributesToPropertyMappingWithdictionary:(NSDictionary *)dictionary
-                                                 ignoreAttributes:(NSArray *)ignoredAttributes
+- (NSArray *)dhn_genericKeyPathToPropertyMappingWithDictionary:(NSDictionary *)dictionary
+                                                 ignoreKeyPaths:(NSArray *)ignoredKeyPaths
 {
-    NSMutableArray *mappedAttributes = [NSMutableArray array];
+    NSMutableArray *mappedKeyPaths = [NSMutableArray array];
     
-    // prepare ignored attributes. trim sub keypaths from the ignored attribute
-    __block NSMutableArray *skippingAttributes = [NSMutableArray array];
-    [ignoredAttributes enumerateObjectsUsingBlock:^(NSString *dictionaryKeyPath, NSUInteger idx, BOOL *stop) {
+    // prepare ignored kay paths. trim sub keypaths from the ignored key path
+    __block NSMutableArray *skippingKeyPaths = [NSMutableArray array];
+    [ignoredKeyPaths enumerateObjectsUsingBlock:^(NSString *dictionaryKeyPath, NSUInteger idx, BOOL *stop) {
        
-        [skippingAttributes addObject:[[dictionaryKeyPath componentsSeparatedByString:@"."] firstObject]];
+        [skippingKeyPaths addObject:[[dictionaryKeyPath componentsSeparatedByString:@"."] firstObject]];
         
     }];
     
-    [[dictionary allKeys] enumerateObjectsUsingBlock:^(NSString *attributeName, NSUInteger idx, BOOL *stop) {
+    [[dictionary allKeys] enumerateObjectsUsingBlock:^(NSString *keyPath, NSUInteger idx, BOOL *stop) {
         
-        if (![skippingAttributes containsObject:attributeName]) {
+        if (![skippingKeyPaths containsObject:keyPath]) {
             
-            if ([self respondsToSelector:NSSelectorFromString(attributeName)]) {
+            if ([self respondsToSelector:NSSelectorFromString(keyPath)]) {
                 
-                id dictionaryData = dictionary[attributeName];
+                id dictionaryData = dictionary[keyPath];
                 
                 if ([self dhn_isValidValue:dictionaryData]) {
-                    [self setValue:dictionaryData forKey:attributeName];
-                    [mappedAttributes addObject:attributeName];
+                    [self setValue:dictionaryData forKey:keyPath];
+                    [mappedKeyPaths addObject:keyPath];
                 }
                 
             };
@@ -292,15 +292,15 @@ NSObject *const kDHNMappingByDefault = @"kDHNMappingByDefault";
         
     }];
     
-    return [mappedAttributes copy];
+    return [mappedKeyPaths copy];
 
 }
 
-- (NSArray *)dhn_attributesToPropertyMappingWithdictionary:(NSDictionary *)dictionary
+- (NSArray *)dhn_keyPathToPropertyMappingWithDictionary:(NSDictionary *)dictionary
                                           andConfiguration:(DHNObjectMappingConfiguration *)mappingConfiguration
 {
     
-    __block NSMutableArray *mappedAttributes = [NSMutableArray array];
+    __block NSMutableArray *mappedKeyPaths = [NSMutableArray array];
     
     [mappingConfiguration.valueMappings enumerateKeysAndObjectsUsingBlock:^(NSString *dictionaryKeyPath, NSString *propertyKeyPath, BOOL *stop) {
         
@@ -340,21 +340,21 @@ NSObject *const kDHNMappingByDefault = @"kDHNMappingByDefault";
                 
             if (mappedObject) {
                 [self setValue:mappedObject forKeyPath:propertyKeyPath];
-                [mappedAttributes addObject:dictionaryKeyPath];
+                [mappedKeyPaths addObject:dictionaryKeyPath];
             }
         }
     }];
     
-    return [mappedAttributes copy];
+    return [mappedKeyPaths copy];
     
 }
 
-- (NSArray *)dhn_attributeMappingWithdictionary:(NSDictionary *)dictionary
+- (NSArray *)dhn_keyPathMappingWithDictionary:(NSDictionary *)dictionary
                                andConfiguration:(DHNObjectMappingConfiguration *)mappingConfiguration
 {
     
-    __block NSMutableArray *mappedAttributes = [NSMutableArray array];
-    // general attribute mapping
+    __block NSMutableArray *mappedKeyPaths = [NSMutableArray array];
+    // general key path mapping
     [mappingConfiguration.keyPathMappings enumerateKeysAndObjectsUsingBlock:^(NSString *dictionaryKeyPath, DHNMappingBlock mappingBlock, BOOL *stop) {
         
         id dictionaryData = [dictionary valueForKeyPath:dictionaryKeyPath];
@@ -363,12 +363,12 @@ NSObject *const kDHNMappingByDefault = @"kDHNMappingByDefault";
             
             mappingBlock(dictionaryKeyPath, dictionaryData);
             
-            [mappedAttributes addObject:dictionaryKeyPath];
+            [mappedKeyPaths addObject:dictionaryKeyPath];
         }
         
     }];
     
-    return [mappedAttributes copy];
+    return [mappedKeyPaths copy];
     
 }
 
